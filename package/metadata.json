@@ -1,0 +1,20 @@
+{
+    "KPlugin": {
+        "Authors": [
+            {
+                "Email": "mehmetbalikci460@gmail.com",
+                "Name": "Mehmet Balikci"
+            }
+        ],
+        "Category": "Utilities",
+        "Description": "A widget to execute shell scripts from the plasma panel",
+        "Icon": "terminal",
+        "Id": "com.whocares.idk",
+        "Name": "Plasma-Panel-Shell-Execute",
+        "Version": "1",
+        "Website": "",
+        "BugReportUrl": ""
+    },
+    "X-Plasma-API-Minimum-Version": "6.0",
+    "KPackageStructure": "Plasma/Applet"
+}
