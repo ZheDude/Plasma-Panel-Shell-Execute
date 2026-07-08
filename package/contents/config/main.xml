@@ -8,18 +8,16 @@
         </entry>
     </group>
     <group name="Update">
-        <entry name="secondGroupExample" type="Bool">
-            <default>false</default>
-        </entry>
     </group>
     <group name="Docker">
-        <entry name="secondGroupExample" type="Bool">
-            <default>false</default>
+        <entry name="dockerMode" type="String">
+            <default>dynamic</default>
+        </entry>
+        <entry name="dockerContainers" type="String">
+            <!-- JSON array: [{"label":"My App","icon":"docker","containerName":"myapp"}] -->
+            <default>[]</default>
         </entry>
     </group>
     <group name="Backup">
-        <entry name="secondGroupExample" type="Bool">
-            <default>false</default>
-        </entry>
     </group>
 </kcfg>

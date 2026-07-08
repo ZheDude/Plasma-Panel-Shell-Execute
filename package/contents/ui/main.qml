@@ -19,7 +19,7 @@ PlasmoidItem {
 
     preferredRepresentation: compactRepresentation
 
-    //toolTipTextFormat: Text.StyledText
+    toolTipTextFormat: Text.StyledText
     toolTipSubText: "Select a Script to run"
     Plasma5Support.DataSource {
         id: executable
@@ -93,6 +93,54 @@ PlasmoidItem {
         });
     }
 
+    ListModel {
+        id: dockerModel
+    }
+
+    function refreshDockerContainers() {
+        dockerModel.clear();
+
+        if (Plasmoid.configuration.dockerMode === "manual") {
+            try {
+                const list = JSON.parse(Plasmoid.configuration.dockerContainers || "[]");
+                for (const entry of list) {
+                    dockerModel.append({
+                        label: entry.label,
+                        icon: entry.icon || "docker",
+                        containerName: entry.containerName,
+                        status: "unknown"
+                    });
+                }
+            } catch (e) {
+                console.log("Failed to parse dockerContainers config:", e);
+            }
+            return;
+        }
+
+        // Dynamic mode: ask docker directly
+        executable.exec("docker ps -a --format '{{.Names}}|{{.Status}}'", function (data) {
+            if (data["exit code"] !== 0) {
+                console.log("docker ps failed:", data["stderr"]);
+                return;
+            }
+            const lines = data["stdout"].split("\n").filter(l => l.trim().length > 0);
+            dockerModel.clear();
+            for (const line of lines) {
+                const [name, status] = line.split("|");
+                dockerModel.append({
+                    label: name,
+                    icon: status && status.startsWith("Up") ? "media-playback-start" : "media-playback-stop",
+                    containerName: name,
+                    status: status && status.startsWith("Up") ? "running" : "stopped"
+                });
+            }
+        });
+    }
+
+    function shQuote(str) {
+        return "'" + String(str).replace(/'/g, "'\\''") + "'";
+    }
+
     compactRepresentation: Item {
         id: compactRoot
         implicitWidth: Kirigami.Units.gridUnit * 2
@@ -140,7 +188,10 @@ PlasmoidItem {
                     text: "Docker"
                     icon.name: "docker-desktop"
                     Layout.fillWidth: true
-                    onClicked: stackView.push(dockerSubMenu)
+                    onClicked: {
+                        root.refreshDockerContainers();
+                        stackView.push(dockerMenu);
+                    }
                 }
                 PlasmaComponents.ItemDelegate {
                     text: "Restart VPN"
@@ -200,46 +251,101 @@ PlasmoidItem {
 
         // "Docker" submenu
         Component {
-            id: dockerSubMenu
+            id: dockerMenu
             ColumnLayout {
-                spacing: 0
                 property string title: "Docker"
                 property string icon: "docker-desktop"
+                spacing: 0
 
-                DockerListDelegate {
-                    id: currentDockerItem
-                    text: ""
-                    subText: ""
-                    iconItem: ""
-                    hoverEnabled: false
-                    visible: true
-                }
+                Repeater {
+                    model: dockerModel
+                    delegate: PlasmaComponents.ItemDelegate {
+                        id: containerDelegate
+                        required property string label
+                        property string iconName
+                        required property string containerName
+                        required property string status
 
-                PlasmaComponents.ScrollView {
-                    id: dockerScroll
-                    Layout.fillWidth: true
-                    Layout.fillHeight: true
-                    PlasmaComponents.ScrollBar.horizontal.policy: PlasmaComponents.ScrollBar.AlwaysOff
-                    ListView {
-                        id: dockerList
-                        //model: dockerModel
+                        text: label
+                        icon.name: iconName
+                        Layout.fillWidth: true
+                        onClicked: stackView.push(containerActionsPage, {
+                            containerName: containerName,
+                            containerLabel: label,
+                            initialStatus: status,
+                            statusText: status
+                        })
 
-                        focus: true
-                        interactive: true
-                        keyNavigationWraps: true
-
-                        delegate: DockerListDelegate {
-                            width: ListView.view.width
-
-                            activeFocusOnTab: true
-
-                            text: model.text
-                            icon: model.icon
-
-                            KeyNavigation.up: index === 0 ? currenDockerItem.nextItemInFocusChain() : dockerList.itemAtIndex(index - 1)
-                            KeyNavigation.down: index === dockerList.count - 1 ? newSessionButton : dockerList.itemAtIndex(index + 1)
+                        Rectangle {
+                            width: Kirigami.Units.smallSpacing * 1.4
+                            height: width
+                            radius: width / 2
+                            color: containerDelegate.status === "running" ? Kirigami.Theme.positiveTextColor : Kirigami.Theme.negativeTextColor
+                            anchors.right: parent.right
+                            anchors.rightMargin: Kirigami.Units.smallSpacing
+                            anchors.verticalCenter: parent.verticalCenter
                         }
                     }
+                }
+
+                PlasmaComponents.ItemDelegate {
+                    text: "Refresh"
+                    icon.name: "view-refresh"
+                    Layout.fillWidth: true
+                    visible: Plasmoid.configuration.dockerMode === "dynamic"
+                    onClicked: root.refreshDockerContainers()
+                }
+            }
+        }
+
+        Component {
+            id: containerActionsPage
+            ColumnLayout {
+                id: actionsRoot
+                required property string containerName
+                required property string containerLabel
+                required property string initialStatus
+                required property string statusText
+
+                property string title: containerLabel
+                property string icon: "docker-desktop"
+                spacing: 0
+                PlasmaComponents.ItemDelegate {
+                    text: actionsRoot.statusText
+                    icon.name: actionsRoot.isRunning ? "media-playback-start" : "media-playback-stop"
+                    Layout.fillWidth: true
+                    enabled: false
+                    opacity: 0.8
+                }
+                PlasmaComponents.ItemDelegate {
+                    text: "Start"
+                    icon.name: "media-playback-start"
+                    Layout.fillWidth: true
+                    onClicked: root.runCommand("docker start " + root.shQuote(actionsRoot.containerName), "Start " + actionsRoot.containerLabel)
+                }
+                PlasmaComponents.ItemDelegate {
+                    text: "Stop"
+                    icon.name: "media-playback-stop"
+                    Layout.fillWidth: true
+                    onClicked: root.runCommand("docker stop " + root.shQuote(actionsRoot.containerName), "Stop " + actionsRoot.containerLabel)
+                }
+                PlasmaComponents.ItemDelegate {
+                    text: "Restart"
+                    icon.name: "view-refresh"
+                    Layout.fillWidth: true
+                    onClicked: root.runCommand("docker restart " + root.shQuote(actionsRoot.containerName), "Restart " + actionsRoot.containerLabel)
+                }
+                PlasmaComponents.ItemDelegate {
+                    text: "View Logs"
+                    icon.name: "text-x-log"
+                    Layout.fillWidth: true
+                    onClicked: root.runCommand("konsole --hold -e bash -c " + root.shQuote("docker logs -f " + actionsRoot.containerName), "Logs: " + actionsRoot.containerLabel)
+                }
+                PlasmaComponents.ItemDelegate {
+                    text: "Remove"
+                    icon.name: "edit-delete"
+                    Layout.fillWidth: true
+                    onClicked: root.runCommand("docker rm -f " + root.shQuote(actionsRoot.containerName), "Remove " + actionsRoot.containerLabel)
                 }
             }
         }
