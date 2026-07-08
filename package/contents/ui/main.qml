@@ -102,7 +102,6 @@ PlasmoidItem {
             icon.name: "terminal"
 
             onClicked: {
-                console.log("clicked");
                 root.expanded = !root.expanded;
             }
         }
@@ -136,6 +135,12 @@ PlasmoidItem {
                     icon.name: "document-save"
                     Layout.fillWidth: true
                     onClicked: stackView.push(backupSubMenu)
+                }
+                PlasmaComponents.ItemDelegate {
+                    text: "Docker"
+                    icon.name: "docker-desktop"
+                    Layout.fillWidth: true
+                    onClicked: stackView.push(dockerSubMenu)
                 }
                 PlasmaComponents.ItemDelegate {
                     text: "Restart VPN"
@@ -189,6 +194,52 @@ PlasmoidItem {
                     icon.name: "edit-undo"
                     Layout.fillWidth: true
                     onClicked: console.log("restore")
+                }
+            }
+        }
+
+        // "Docker" submenu
+        Component {
+            id: dockerSubMenu
+            ColumnLayout {
+                spacing: 0
+                property string title: "Docker"
+                property string icon: "docker-desktop"
+
+                DockerListDelegate {
+                    id: currentDockerItem
+                    text: ""
+                    subText: ""
+                    iconItem: ""
+                    hoverEnabled: false
+                    visible: true
+                }
+
+                PlasmaComponents.ScrollView {
+                    id: dockerScroll
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    PlasmaComponents.ScrollBar.horizontal.policy: PlasmaComponents.ScrollBar.AlwaysOff
+                    ListView {
+                        id: dockerList
+                        //model: dockerModel
+
+                        focus: true
+                        interactive: true
+                        keyNavigationWraps: true
+
+                        delegate: DockerListDelegate {
+                            width: ListView.view.width
+
+                            activeFocusOnTab: true
+
+                            text: model.text
+                            icon: model.icon
+
+                            KeyNavigation.up: index === 0 ? currenDockerItem.nextItemInFocusChain() : dockerList.itemAtIndex(index - 1)
+                            KeyNavigation.down: index === dockerList.count - 1 ? newSessionButton : dockerList.itemAtIndex(index + 1)
+                        }
+                    }
                 }
             }
         }
