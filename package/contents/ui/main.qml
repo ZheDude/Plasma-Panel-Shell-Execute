@@ -1,61 +1,89 @@
+pragma ComponentBehavior: Bound
 import QtQuick
 import QtQuick.Layouts
+import org.kde.plasma.components as PlasmaComponents
 import org.kde.plasma.plasmoid
-import org.kde.plasma.components 3.0 as PlasmaComponents
 import org.kde.plasma.core as PlasmaCore
 import org.kde.kirigami as Kirigami
 import org.kde.kirigamiaddons.components as KirigamiComponents
+import org.kde.config as KConfig  // KAuthorized.authorizeControlModule
+import org.kde.coreaddons as KCoreAddons // kuser
 
-PlasmoidItem{
-  id: root
-  toolTipTextFormat: Text.StyledText
-  toolTipSubText: i18n("Select a script to run")
+PlasmoidItem {
+    id: root
 
-  compactRepresentation: MouseArea {
-    id: compactRoot
-    readonly property bool tooSmall: Plasmoid.formFactor === PlasmaCore.Types.Horizontal && Math.round(2 * (compactRoot.height / 5)) <= Kirigami.Theme.smallFont.pixelSize
+    readonly property bool showIcon: true
+    readonly property string icon: "terminal"
+    readonly property bool showText: true
 
-    Layout.minimumWidth: isVertical ? 0 : compactRow.implicitWidth
-    Layout.maximumWidth: isVertical ? Infinity : Layout.minimumWidth
-    Layout.preferredWidth: isVertical ? -1 : Layout.minimumWidth
+    readonly property bool isVertical: Plasmoid.formFactor === PlasmaCore.Types.Vertical
+    readonly property bool inPanel: (Plasmoid.location === PlasmaCore.Types.TopEdge || Plasmoid.location === PlasmaCore.Types.RightEdge || Plasmoid.location === PlasmaCore.Types.BottomEdge || Plasmoid.location === PlasmaCore.Types.LeftEdge)
 
-    Layout.minimumHeight: isVertical ? label.height : Kirigami.Theme.smallFont.pixelSize
-    Layout.maximumHeight: isVertical ? Layout.minimumHeight : Infinity
-    Layout.preferredHeight: isVertical ? Layout.minimumHeight : Kirigami.Units.iconSizes.sizeForLabels * 2
+    preferredRepresentation: compactRepresentation
 
-    property bool wasExpanded
-    onPressed: wasExpanded = root.expanded
-    onClicked: root.expanded = !wasExpanded
+    //toolTipTextFormat: Text.StyledText
+    toolTipSubText: "Select a Script to run"
 
-    Row {
-        id: compactRow
+    compactRepresentation: Item {
+        id: compactRoot
+        implicitWidth: Kirigami.Units.gridUnit * 2
+        implicitHeight: implicitWidth
+        PlasmaComponents.ToolButton {
+            anchors.fill: parent
+            icon.name: "folder"
 
-        anchors.centerIn: parent
-        spacing: Kirigami.Units.smallSpacing
-
-        Kirigami.Icon {
-            id: terminalIcon
-            source: "terminal"
-            anchors.verticalCenter: parent.verticalCenter
-            height: compactRoot.height - Math.round(Kirigami.Units.smallSpacing / 2)
-            width: height
-            visible: root.showIcon
-        }
-
-        PlasmaComponents.Label {
-            id: label
-            width: root.isVertical ? compactRoot.width : contentWidth
-            height: root.isVertical ? contentHeight : compactRoot.height
-            text: root.displayedName
-            textFormat: Text.PlainText
-            horizontalAlignment: Text.AlignHCenter
-            verticalAlignment: Text.AlignVCenter
-            wrapMode: Text.NoWrap
-            fontSizeMode: root.isVertical ? Text.HorizontalFit : Text.VerticalFit
-            font.pixelSize: tooSmall ? Kirigami.Theme.defaultFont.pixelSize : Kirigami.Units.iconSizes.roundedIconSize(Kirigami.Units.gridUnit * 2)
-            minimumPointSize: Kirigami.Theme.smallFont.pointSize
-            visible: root.showName
+            onClicked: {
+                console.log("clicked");
+                root.expanded = !root.expanded;
+            }
         }
     }
-  }
+
+    fullRepresentation: Item {
+        id: fullRoot
+
+        implicitHeight: column.implicitHeight
+        implicitWidth: column.implicitWidth
+
+        Layout.preferredWidth: root.showText ? Kirigami.Units.gridUnit * 12 : Kirigami.Units.iconSizes.smallMedium * 1.6
+        Layout.preferredHeight: implicitHeight
+        Layout.minimumWidth: Layout.preferredWidth
+        Layout.minimumHeight: Layout.preferredHeight
+        Layout.maximumWidth: Layout.preferredWidth
+        Layout.maximumHeight: Layout.preferredHeight
+
+        ColumnLayout {
+            id: column
+
+            anchors.fill: parent
+            spacing: 0
+
+            PlasmaComponents.ScrollView {
+                id: scroll
+
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+
+                PlasmaComponents.ScrollBar.horizontal.policy: PlasmaComponents.ScrollBar.AlwaysOff
+                ColumnLayout {
+                    width: parent.width
+
+                    PlasmaComponents.ItemDelegate {
+                        text: "Update"
+                        icon.name: "system-software-update"
+                    }
+
+                    PlasmaComponents.ItemDelegate {
+                        text: "Backup"
+                        icon.name: "document-save"
+                    }
+
+                    PlasmaComponents.ItemDelegate {
+                        text: "Restart VPN"
+                        icon.name: "network-vpn"
+                    }
+                }
+            }
+        }
+    }
 }

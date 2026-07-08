@@ -7,13 +7,16 @@
             }
         ],
         "Category": "Utilities",
-        "Description": "A widget to execute shell scripts from the plasma panel",
+        "Description": "A widget to take over the world!",
         "Icon": "terminal",
-        "Id": "com.whocares.idk",
-        "Name": "Plasma-Panel-Shell-Execute",
+        "Id": "org.kde.plasma.shellexecute",
+        "Name": "Plasma-Shell-Execute",
         "Version": "1",
-        "Website": "",
-        "BugReportUrl": ""
+        "Website": "https://example.com/user/plasmoid-helloworldplugin",
+        "BugReportUrl": "https://example.com/user/plasmoid-helloworldplugin/bugs",
+        "ServiceTypes": [
+            "Plasma/Applet"
+        ],
     },
     "X-Plasma-API-Minimum-Version": "6.0",
     "KPackageStructure": "Plasma/Applet"
