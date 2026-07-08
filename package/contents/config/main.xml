@@ -8,6 +8,9 @@
         </entry>
     </group>
     <group name="Update">
+        <entry name="backupCommand" type="String">
+            <default>[]</default>
+        </entry>
     </group>
     <group name="Docker">
         <entry name="dockerMode" type="String">

@@ -97,6 +97,10 @@ PlasmoidItem {
         id: dockerModel
     }
 
+    ListModel {
+        id: backupModel
+    }
+
     function refreshDockerContainers() {
         dockerModel.clear();
 
@@ -129,7 +133,7 @@ PlasmoidItem {
                 const [name, status] = line.split("|");
                 dockerModel.append({
                     label: name,
-                    icon: status && status.startsWith("Up") ? "media-playback-start" : "media-playback-stop",
+                    iconName: status && status.startsWith("Up") ? "systemback" : "system-shut-down",
                     containerName: name,
                     status: status && status.startsWith("Up") ? "running" : "stopped"
                 });
@@ -262,7 +266,7 @@ PlasmoidItem {
                     delegate: PlasmaComponents.ItemDelegate {
                         id: containerDelegate
                         required property string label
-                        property string iconName
+                        required property string iconName
                         required property string containerName
                         required property string status
 
@@ -275,16 +279,6 @@ PlasmoidItem {
                             initialStatus: status,
                             statusText: status
                         })
-
-                        Rectangle {
-                            width: Kirigami.Units.smallSpacing * 1.4
-                            height: width
-                            radius: width / 2
-                            color: containerDelegate.status === "running" ? Kirigami.Theme.positiveTextColor : Kirigami.Theme.negativeTextColor
-                            anchors.right: parent.right
-                            anchors.rightMargin: Kirigami.Units.smallSpacing
-                            anchors.verticalCenter: parent.verticalCenter
-                        }
                     }
                 }
 
