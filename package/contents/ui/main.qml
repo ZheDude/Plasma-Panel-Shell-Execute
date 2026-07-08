@@ -43,10 +43,10 @@ PlasmoidItem {
     fullRepresentation: Item {
         id: fullRoot
 
-        implicitHeight: Kirigami.Units.gridUnit * 12
-        implicitWidth: headerRow.implicitHeight + stackView.implicitHeight
+        implicitWidth: mainColumn.implicitWidth
+        implicitHeight: mainColumn.implicitHeight
 
-        Layout.preferredWidth: Kirigami.Units.gridUnit * 12
+        Layout.preferredWidth: implicitWidth
         Layout.preferredHeight: implicitHeight
         Layout.minimumWidth: Layout.preferredWidth
         Layout.minimumHeight: Layout.preferredHeight
@@ -127,30 +127,33 @@ PlasmoidItem {
 
         // -------- Layout: header (back button + title) + stack --------
         ColumnLayout {
+            id: mainColumn
             anchors.fill: parent
             spacing: 0
 
             RowLayout {
                 id: headerRow
                 Layout.fillWidth: true
-                visible: stackView.depth > 1
-                Layout.preferredHeight: visible ? implicitHeight : 0
+                Layout.preferredHeight: implicitHeight
 
                 PlasmaComponents.ToolButton {
                     icon.name: "go-previous"
                     onClicked: stackView.pop()
+                    visible: stackView.depth > 1
                 }
                 PlasmaComponents.ItemDelegate {
-                    text: stackView.currentItem && stackView.currentItem.title !== undefined ? stackView.currentItem.title : ""
-                    icon.name: stackView.currentItem && stackView.currentItem.icon !== undefined ? stackView.currentItem.icon : ""
+                    text: stackView.currentItem && stackView.currentItem.title !== undefined ? stackView.currentItem.title : "Workflow"
+                    icon.name: stackView.currentItem && stackView.currentItem.icon !== undefined ? stackView.currentItem.icon : "workflowy"
                     Layout.fillWidth: true
+                    hoverEnabled: false
                 }
             }
 
             QQC2.StackView {
                 id: stackView
                 Layout.fillWidth: true
-                Layout.preferredHeight: currentItem ? currentItem.implicitHeight : 0
+                implicitWidth: currentItem ? currentItem.implicitWidth : 0
+                implicitHeight: currentItem ? currentItem.implicitHeight : 0
                 initialItem: mainMenuPage
 
                 pushEnter: Transition {
