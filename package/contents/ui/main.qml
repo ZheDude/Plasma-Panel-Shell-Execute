@@ -1,13 +1,14 @@
 pragma ComponentBehavior: Bound
 import QtQuick
 import QtQuick.Layouts
+import QtQuick.Controls as QQC2
 import org.kde.plasma.components as PlasmaComponents
 import org.kde.plasma.plasmoid
 import org.kde.plasma.core as PlasmaCore
 import org.kde.kirigami as Kirigami
 import org.kde.kirigamiaddons.components as KirigamiComponents
-import org.kde.config as KConfig  // KAuthorized.authorizeControlModule
-import org.kde.coreaddons as KCoreAddons // kuser
+import org.kde.config as KConfig
+import org.kde.coreaddons as KCoreAddons
 
 PlasmoidItem {
     id: root
@@ -30,7 +31,7 @@ PlasmoidItem {
         implicitHeight: implicitWidth
         PlasmaComponents.ToolButton {
             anchors.fill: parent
-            icon.name: "folder"
+            icon.name: "workflowy"
 
             onClicked: {
                 console.log("clicked");
@@ -42,45 +43,146 @@ PlasmoidItem {
     fullRepresentation: Item {
         id: fullRoot
 
-        implicitHeight: column.implicitHeight
-        implicitWidth: column.implicitWidth
+        implicitHeight: Kirigami.Units.gridUnit * 12
+        implicitWidth: headerRow.implicitHeight + stackView.implicitHeight
 
-        Layout.preferredWidth: root.showText ? Kirigami.Units.gridUnit * 12 : Kirigami.Units.iconSizes.smallMedium * 1.6
+        Layout.preferredWidth: Kirigami.Units.gridUnit * 12
         Layout.preferredHeight: implicitHeight
         Layout.minimumWidth: Layout.preferredWidth
         Layout.minimumHeight: Layout.preferredHeight
         Layout.maximumWidth: Layout.preferredWidth
         Layout.maximumHeight: Layout.preferredHeight
 
-        ColumnLayout {
-            id: column
+        Component {
+            id: mainMenuPage
+            ColumnLayout {
+                spacing: 0
+                PlasmaComponents.ItemDelegate {
+                    text: "Update"
+                    icon.name: "system-software-update"
+                    Layout.fillWidth: true
+                    onClicked: stackView.push(updateSubMenu)
+                }
+                PlasmaComponents.ItemDelegate {
+                    text: "Backup"
+                    icon.name: "document-save"
+                    Layout.fillWidth: true
+                    onClicked: stackView.push(backupSubMenu)
+                }
+                PlasmaComponents.ItemDelegate {
+                    text: "Restart VPN"
+                    icon.name: "network-vpn"
+                    Layout.fillWidth: true
+                    onClicked: {
+                        console.log("Restart VPN clicked");
+                        root.expanded = false;
+                    }
+                }
+            }
+        }
 
+        // "Update" submenu
+        Component {
+            id: updateSubMenu
+            ColumnLayout {
+                spacing: 0
+                property string title: "Update"
+                property string icon: "system-software-update"
+                PlasmaComponents.ItemDelegate {
+                    text: "Check for Updates"
+                    icon.name: "view-refresh"
+                    Layout.fillWidth: true
+                    onClicked: console.log("check updates")
+                }
+                PlasmaComponents.ItemDelegate {
+                    text: "Update Now"
+                    icon.name: "system-software-update"
+                    Layout.fillWidth: true
+                    onClicked: console.log("update now")
+                }
+            }
+        }
+
+        // "Backup" submenu
+        Component {
+            id: backupSubMenu
+            ColumnLayout {
+                property string title: "Backup"
+                property string icon: "document-save"
+                spacing: 0
+                PlasmaComponents.ItemDelegate {
+                    text: "Backup Now"
+                    icon.name: "document-save"
+                    Layout.fillWidth: true
+                    onClicked: console.log("backup now")
+                }
+                PlasmaComponents.ItemDelegate {
+                    text: "Restore"
+                    icon.name: "edit-undo"
+                    Layout.fillWidth: true
+                    onClicked: console.log("restore")
+                }
+            }
+        }
+
+        // -------- Layout: header (back button + title) + stack --------
+        ColumnLayout {
             anchors.fill: parent
             spacing: 0
 
-            PlasmaComponents.ScrollView {
-                id: scroll
-
+            RowLayout {
+                id: headerRow
                 Layout.fillWidth: true
-                Layout.fillHeight: true
+                visible: stackView.depth > 1
+                Layout.preferredHeight: visible ? implicitHeight : 0
 
-                PlasmaComponents.ScrollBar.horizontal.policy: PlasmaComponents.ScrollBar.AlwaysOff
-                ColumnLayout {
-                    width: parent.width
+                PlasmaComponents.ToolButton {
+                    icon.name: "go-previous"
+                    onClicked: stackView.pop()
+                }
+                PlasmaComponents.ItemDelegate {
+                    text: stackView.currentItem && stackView.currentItem.title !== undefined ? stackView.currentItem.title : ""
+                    icon.name: stackView.currentItem && stackView.currentItem.icon !== undefined ? stackView.currentItem.icon : ""
+                    Layout.fillWidth: true
+                }
+            }
 
-                    PlasmaComponents.ItemDelegate {
-                        text: "Update"
-                        icon.name: "system-software-update"
+            QQC2.StackView {
+                id: stackView
+                Layout.fillWidth: true
+                Layout.preferredHeight: currentItem ? currentItem.implicitHeight : 0
+                initialItem: mainMenuPage
+
+                pushEnter: Transition {
+                    PropertyAnimation {
+                        property: "x"
+                        from: stackView.width
+                        to: 0
+                        duration: Kirigami.Units.longDuration
                     }
-
-                    PlasmaComponents.ItemDelegate {
-                        text: "Backup"
-                        icon.name: "document-save"
+                }
+                pushExit: Transition {
+                    PropertyAnimation {
+                        property: "x"
+                        from: 0
+                        to: -stackView.width
+                        duration: Kirigami.Units.longDuration
                     }
-
-                    PlasmaComponents.ItemDelegate {
-                        text: "Restart VPN"
-                        icon.name: "network-vpn"
+                }
+                popEnter: Transition {
+                    PropertyAnimation {
+                        property: "x"
+                        from: -stackView.width
+                        to: 0
+                        duration: Kirigami.Units.longDuration
+                    }
+                }
+                popExit: Transition {
+                    PropertyAnimation {
+                        property: "x"
+                        from: 0
+                        to: stackView.width
+                        duration: Kirigami.Units.longDuration
                     }
                 }
             }

@@ -6,7 +6,7 @@
                 "Name": "Mehmet Balikci"
             }
         ],
-        "Category": "Utilities",
+        "Category": "System Information",
         "Description": "A widget to take over the world!",
         "Icon": "terminal",
         "Id": "org.kde.plasma.shellexecute",
@@ -16,7 +16,7 @@
         "BugReportUrl": "https://example.com/user/plasmoid-helloworldplugin/bugs",
         "ServiceTypes": [
             "Plasma/Applet"
-        ],
+        ]
     },
     "X-Plasma-API-Minimum-Version": "6.0",
     "KPackageStructure": "Plasma/Applet"
