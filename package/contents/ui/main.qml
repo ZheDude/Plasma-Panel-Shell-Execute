@@ -6,16 +6,13 @@ import org.kde.plasma.components as PlasmaComponents
 import org.kde.plasma.plasmoid
 import org.kde.plasma.core as PlasmaCore
 import org.kde.kirigami as Kirigami
-import org.kde.kirigamiaddons.components as KirigamiComponents
-import org.kde.config as KConfig
-import org.kde.coreaddons as KCoreAddons
+import org.kde.plasma.plasma5support as Plasma5Support
+import org.kde.notification as Notification
 
 PlasmoidItem {
     id: root
 
-    readonly property bool showIcon: true
     readonly property string icon: "terminal"
-    readonly property bool showText: true
 
     readonly property bool isVertical: Plasmoid.formFactor === PlasmaCore.Types.Vertical
     readonly property bool inPanel: (Plasmoid.location === PlasmaCore.Types.TopEdge || Plasmoid.location === PlasmaCore.Types.RightEdge || Plasmoid.location === PlasmaCore.Types.BottomEdge || Plasmoid.location === PlasmaCore.Types.LeftEdge)
@@ -24,6 +21,77 @@ PlasmoidItem {
 
     //toolTipTextFormat: Text.StyledText
     toolTipSubText: "Select a Script to run"
+    Plasma5Support.DataSource {
+        id: executable
+        engine: "executable"
+        connectedSources: []
+
+        property var callbacks: ({})
+
+        function exec(cmd, callback) {
+            const sourceName = cmd + " #" + Date.now() + Math.random();
+            if (callback)
+                callbacks[sourceName] = callback;
+            connectSource(sourceName);
+            return sourceName;
+        }
+
+        onNewData: (sourceName, data) => {
+            if (callbacks[sourceName]) {
+                callbacks[sourceName](data);
+                delete callbacks[sourceName];
+            }
+            disconnectSource(sourceName);
+        }
+    }
+    Component {
+        id: notificationComponent
+        Notification.Notification {
+            componentName: "plasma_workspace"
+            eventId: "notification"
+            autoDelete: true   // clean up the QML object once it's closed
+        }
+    }
+
+    function runCommand(cmd, label, timeoutMs = 60000) {
+        // 1. Create + show a "running" notification
+        const notif = notificationComponent.createObject(root, {
+            title: label,
+            text: "Running…",
+            iconName: "system-run",
+            flags: Notification.Notification.Persistent // stays open until we update it
+        });
+        notif.sendEvent();
+
+        let finished = false;
+        let sourceName = "";
+
+        const timeoutTimer = Qt.createQmlObject('import QtQuick; Timer { interval: ' + timeoutMs + '; running: true; repeat: false }', root);
+        timeoutTimer.triggered.connect(function () {
+            if (!finished) {
+                finished = true;
+                executable.disconnectSource(sourceName);
+                delete executable.callbacks[sourceName];
+                notif.text = "Timed out waiting for authentication";
+                notif.iconName = "dialog-error";
+                notif.flags = Notification.Notification.CloseOnTimeout;
+                notif.sendEvent();
+            }
+            timeoutTimer.destroy();
+        });
+
+        sourceName = executable.exec(cmd, function (data) {
+            if (finished)
+                return;
+            finished = true;
+            timeoutTimer.stop();
+            const success = data["exit code"] === 0;
+            notif.text = success ? "Completed successfully" : "Failed (exit " + data["exit code"] + "): " + data["stderr"];
+            notif.iconName = success ? "dialog-ok" : "dialog-error";
+            notif.flags = Notification.Notification.CloseOnTimeout;
+            notif.sendEvent();
+        });
+    }
 
     compactRepresentation: Item {
         id: compactRoot
@@ -31,7 +99,7 @@ PlasmoidItem {
         implicitHeight: implicitWidth
         PlasmaComponents.ToolButton {
             anchors.fill: parent
-            icon.name: "workflowy"
+            icon.name: "terminal"
 
             onClicked: {
                 console.log("clicked");
@@ -74,7 +142,7 @@ PlasmoidItem {
                     icon.name: "network-vpn"
                     Layout.fillWidth: true
                     onClicked: {
-                        console.log("Restart VPN clicked");
+                        root.runCommand("pkexec whoami", "Test Auth");
                         root.expanded = false;
                     }
                 }
@@ -92,7 +160,7 @@ PlasmoidItem {
                     text: "Check for Updates"
                     icon.name: "view-refresh"
                     Layout.fillWidth: true
-                    onClicked: console.log("check updates")
+                    onClicked: root.runCommand("konsole -e bash -c 'sudo dnf update'", "Updating", 120000)
                 }
                 PlasmaComponents.ItemDelegate {
                     text: "Update Now"
@@ -143,9 +211,10 @@ PlasmoidItem {
                 }
                 PlasmaComponents.ItemDelegate {
                     text: stackView.currentItem && stackView.currentItem.title !== undefined ? stackView.currentItem.title : "Workflow"
-                    icon.name: stackView.currentItem && stackView.currentItem.icon !== undefined ? stackView.currentItem.icon : "workflowy"
+                    icon.name: stackView.currentItem && stackView.currentItem.icon !== undefined ? stackView.currentItem.icon : "terminal"
                     Layout.fillWidth: true
                     hoverEnabled: false
+                    onClicked: stackView.depth > 1 ? stackView.pop() : null
                 }
             }
 
@@ -161,7 +230,7 @@ PlasmoidItem {
                         property: "x"
                         from: stackView.width
                         to: 0
-                        duration: Kirigami.Units.longDuration
+                        duration: Kirigami.Units.longDuration * 1.4
                     }
                 }
                 pushExit: Transition {
@@ -169,7 +238,7 @@ PlasmoidItem {
                         property: "x"
                         from: 0
                         to: -stackView.width
-                        duration: Kirigami.Units.longDuration
+                        duration: Kirigami.Units.longDuration * 1.4
                     }
                 }
                 popEnter: Transition {
@@ -177,7 +246,7 @@ PlasmoidItem {
                         property: "x"
                         from: -stackView.width
                         to: 0
-                        duration: Kirigami.Units.longDuration
+                        duration: Kirigami.Units.longDuration * 1.4
                     }
                 }
                 popExit: Transition {
@@ -185,7 +254,7 @@ PlasmoidItem {
                         property: "x"
                         from: 0
                         to: stackView.width
-                        duration: Kirigami.Units.longDuration
+                        duration: Kirigami.Units.longDuration * 1.4
                     }
                 }
             }
