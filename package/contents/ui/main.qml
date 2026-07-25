@@ -72,7 +72,7 @@ PlasmoidItem {
                 finished = true;
                 executable.disconnectSource(sourceName);
                 delete executable.callbacks[sourceName];
-                notif.text = "Timed out waiting for authentication";
+                notif.text = "Timed out";
                 notif.iconName = "dialog-error";
                 notif.flags = Notification.Notification.CloseOnTimeout;
                 notif.sendEvent();
@@ -201,15 +201,6 @@ PlasmoidItem {
                         stackView.push(dockerMenu);
                     }
                 }
-                PlasmaComponents.ItemDelegate {
-                    text: "Restart VPN"
-                    icon.name: "network-vpn"
-                    Layout.fillWidth: true
-                    onClicked: {
-                        root.runCommand("pkexec whoami", "Test Auth");
-                        root.expanded = false;
-                    }
-                }
             }
         }
 
@@ -221,16 +212,10 @@ PlasmoidItem {
                 property string title: "Update"
                 property string icon: "system-software-update"
                 PlasmaComponents.ItemDelegate {
-                    text: "Check for Updates"
-                    icon.name: "view-refresh"
-                    Layout.fillWidth: true
-                    onClicked: root.runCommand("konsole -e bash -c 'sudo dnf update'", "Updating", 120000)
-                }
-                PlasmaComponents.ItemDelegate {
-                    text: "Update Now"
+                    text: "Run Updates"
                     icon.name: "system-software-update"
                     Layout.fillWidth: true
-                    onClicked: console.log("update now")
+                    onClicked: root.runCommand("konsole -e bash -c 'sudo dnf update'", "Updating", 120000)
                 }
             }
         }

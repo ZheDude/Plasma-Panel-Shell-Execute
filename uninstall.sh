@@ -5,7 +5,7 @@
 WIDGET_NAME="org.kde.plasma.shellexecute"
 INSTALL_DIR="$HOME/.local/share/plasma/plasmoids/$WIDGET_NAME"
 
-echo "Uninstalling Plasma Panel Shell Execute widget..."
+echo "Uninstalling Plasma Shell Execute widget..."
 
 if [ -d "$INSTALL_DIR" ]; then
     rm -rf "$INSTALL_DIR"
