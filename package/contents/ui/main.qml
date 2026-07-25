@@ -101,25 +101,26 @@ PlasmoidItem {
         id: backupModel
     }
 
+    function refreshBackupList() {
+        backupModel.clear();
+        try {
+            const list = JSON.parse(Plasmoid.configuration.backupCommand || "[]");
+            console.log(Plasmoid.configuration.backupCommand);
+            for (const entry of list) {
+                backupModel.append({
+                    label: entry.label,
+                    iconName: entry.iconName || "google-drive",
+                    command: entry.commandString
+                });
+            }
+        } catch (e) {
+            console.log("Failed to parse backupCommand config:", e);
+        }
+        return;
+    }
+
     function refreshDockerContainers() {
         dockerModel.clear();
-
-        if (Plasmoid.configuration.dockerMode === "manual") {
-            try {
-                const list = JSON.parse(Plasmoid.configuration.dockerContainers || "[]");
-                for (const entry of list) {
-                    dockerModel.append({
-                        label: entry.label,
-                        icon: entry.icon || "docker",
-                        containerName: entry.containerName,
-                        status: "unknown"
-                    });
-                }
-            } catch (e) {
-                console.log("Failed to parse dockerContainers config:", e);
-            }
-            return;
-        }
 
         // Dynamic mode: ask docker directly
         executable.exec("docker ps -a --format '{{.Names}}|{{.Status}}'", function (data) {
@@ -186,7 +187,10 @@ PlasmoidItem {
                     text: "Backup"
                     icon.name: "document-save"
                     Layout.fillWidth: true
-                    onClicked: stackView.push(backupSubMenu)
+                    onClicked: {
+                        root.refreshBackupList();
+                        stackView.push(backupSubMenu);
+                    }
                 }
                 PlasmaComponents.ItemDelegate {
                     text: "Docker"
@@ -238,17 +242,28 @@ PlasmoidItem {
                 property string title: "Backup"
                 property string icon: "document-save"
                 spacing: 0
-                PlasmaComponents.ItemDelegate {
-                    text: "Backup Now"
-                    icon.name: "document-save"
-                    Layout.fillWidth: true
-                    onClicked: console.log("backup now")
+
+                Repeater {
+                    model: backupModel
+                    delegate: PlasmaComponents.ItemDelegate {
+                        id: backupDelegate
+                        required property string label
+                        required property string iconName
+                        required property string command
+
+                        text: label
+                        icon.name: iconName
+                        Layout.fillWidth: true
+                        onClicked: {
+                            root.runCommand(command);
+                        }
+                    }
                 }
                 PlasmaComponents.ItemDelegate {
-                    text: "Restore"
-                    icon.name: "edit-undo"
+                    text: "Refresh"
+                    icon.name: "view-refresh"
                     Layout.fillWidth: true
-                    onClicked: console.log("restore")
+                    onClicked: root.refreshBackupList()
                 }
             }
         }
@@ -286,7 +301,7 @@ PlasmoidItem {
                     text: "Refresh"
                     icon.name: "view-refresh"
                     Layout.fillWidth: true
-                    visible: Plasmoid.configuration.dockerMode === "dynamic"
+                    visible: true
                     onClicked: root.refreshDockerContainers()
                 }
             }
@@ -306,7 +321,7 @@ PlasmoidItem {
                 spacing: 0
                 PlasmaComponents.ItemDelegate {
                     text: actionsRoot.statusText
-                    icon.name: actionsRoot.isRunning ? "media-playback-start" : "media-playback-stop"
+                    icon.name: actionsRoot.isRunning ? "systemback" : "system-shut-down"
                     Layout.fillWidth: true
                     enabled: false
                     opacity: 0.8
@@ -365,6 +380,7 @@ PlasmoidItem {
                     icon.name: stackView.currentItem && stackView.currentItem.icon !== undefined ? stackView.currentItem.icon : "terminal"
                     Layout.fillWidth: true
                     hoverEnabled: false
+                    highlighted: false
                     onClicked: stackView.depth > 1 ? stackView.pop() : null
                 }
             }

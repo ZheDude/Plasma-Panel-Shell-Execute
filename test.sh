@@ -5,6 +5,6 @@
 ./uninstall.sh
 ./install.sh
 
-plasmoidviewer -a org.kde.plasma.shellexecute
+QT_LOGGING_RULES="qml.debug=true;qt.qml.binding.removal.info=true" plasmoidviewer -a org.kde.plasma.shellexecute
 
 exit

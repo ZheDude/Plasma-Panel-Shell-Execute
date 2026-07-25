@@ -6,21 +6,8 @@
         <entry name="icon" type="String">
             <default>terminal</default>
         </entry>
-    </group>
-    <group name="Update">
         <entry name="backupCommand" type="String">
-            <default>[]</default>
+            <default>terminal</default>
         </entry>
-    </group>
-    <group name="Docker">
-        <entry name="dockerMode" type="String">
-            <default>dynamic</default>
-        </entry>
-        <entry name="dockerContainers" type="String">
-            <!-- JSON array: [{"label":"My App","icon":"docker","containerName":"myapp"}] -->
-            <default>[]</default>
-        </entry>
-    </group>
-    <group name="Backup">
     </group>
 </kcfg>
