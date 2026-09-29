@@ -6,7 +6,7 @@
         <entry name="icon" type="String">
             <default>terminal</default>
         </entry>
-        <entry name="backupCommand" type="String">
+        <entry name="scriptsCommand" type="String">
             <default>terminal</default>
         </entry>
     </group>

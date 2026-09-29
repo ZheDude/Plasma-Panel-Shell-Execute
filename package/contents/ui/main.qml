@@ -98,23 +98,23 @@ PlasmoidItem {
     }
 
     ListModel {
-        id: backupModel
+        id: scriptsModel
     }
 
-    function refreshBackupList() {
-        backupModel.clear();
+    function refreshScriptsList() {
+        scriptsModel.clear();
         try {
-            const list = JSON.parse(Plasmoid.configuration.backupCommand || "[]");
-            console.log(Plasmoid.configuration.backupCommand);
+            const list = JSON.parse(Plasmoid.configuration.scriptsCommand || "[]");
+            console.log(Plasmoid.configuration.scriptsCommand);
             for (const entry of list) {
-                backupModel.append({
+                scriptsModel.append({
                     label: entry.label,
                     iconName: entry.iconName || "google-drive",
                     command: entry.commandString
                 });
             }
         } catch (e) {
-            console.log("Failed to parse backupCommand config:", e);
+            console.log("Failed to parse scriptsCommand config:", e);
         }
         return;
     }
@@ -184,12 +184,12 @@ PlasmoidItem {
                     onClicked: stackView.push(updateSubMenu)
                 }
                 PlasmaComponents.ItemDelegate {
-                    text: "Backup"
+                    text: "Scripts"
                     icon.name: "document-save"
                     Layout.fillWidth: true
                     onClicked: {
-                        root.refreshBackupList();
-                        stackView.push(backupSubMenu);
+                        root.refreshScriptsList();
+                        stackView.push(scriptsSubMenu);
                     }
                 }
                 PlasmaComponents.ItemDelegate {
@@ -220,18 +220,18 @@ PlasmoidItem {
             }
         }
 
-        // "Backup" submenu
+        // "Scripts" submenu
         Component {
-            id: backupSubMenu
+            id: scriptsSubMenu
             ColumnLayout {
-                property string title: "Backup"
+                property string title: "Scripts"
                 property string icon: "document-save"
                 spacing: 0
 
                 Repeater {
-                    model: backupModel
+                    model: scriptsModel
                     delegate: PlasmaComponents.ItemDelegate {
-                        id: backupDelegate
+                        id: scriptsDelegate
                         required property string label
                         required property string iconName
                         required property string command
@@ -248,7 +248,7 @@ PlasmoidItem {
                     text: "Refresh"
                     icon.name: "view-refresh"
                     Layout.fillWidth: true
-                    onClicked: root.refreshBackupList()
+                    onClicked: root.refreshScriptsList()
                 }
             }
         }
