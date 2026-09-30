@@ -105,7 +105,6 @@ PlasmoidItem {
         scriptsModel.clear();
         try {
             const list = JSON.parse(Plasmoid.configuration.scriptsCommand || "[]");
-            console.log(Plasmoid.configuration.scriptsCommand);
             for (const entry of list) {
                 scriptsModel.append({
                     label: entry.label,

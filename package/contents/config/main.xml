@@ -7,7 +7,7 @@
             <default>terminal</default>
         </entry>
         <entry name="scriptsCommand" type="String">
-            <default>terminal</default>
+            <default>[]</default>
         </entry>
     </group>
 </kcfg>

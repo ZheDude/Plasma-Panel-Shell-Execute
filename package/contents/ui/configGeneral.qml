@@ -12,7 +12,6 @@ KCM.SimpleKCM {
     property string cfg_iconDefault
 
     property string cfg_scriptsCommand
-    property string cfg_scriptsCommandDefault
 
 
     Kirigami.FormLayout {
@@ -59,7 +58,6 @@ KCM.SimpleKCM {
         Component.onCompleted: {
             try {
                 commandList = JSON.parse(cfg_scriptsCommand);
-                console.log(commandList);
             } catch (e) {
                 commandList = [];
             }
@@ -82,8 +80,8 @@ KCM.SimpleKCM {
                 icon.name: "list-add"
                 onClicked: {
                     form.commandList.push({
-                        label: "New",
-                        iconName: "google-drive",
+                        label: "",
+                        iconName: "document-save",
                         commandString: ""
                     });
                     form.commandList = form.commandList.slice();
@@ -98,7 +96,7 @@ KCM.SimpleKCM {
                     required property var modelData
                     required property int index
                     QQC2.TextField {
-                        text: form.modelData.label
+                        text: modelData.label
                         placeholderText: "Label"
                         onEditingFinished: {
                             form.commandList[index].label = text;
