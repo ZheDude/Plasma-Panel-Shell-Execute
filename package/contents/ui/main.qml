@@ -19,6 +19,16 @@ PlasmoidItem {
 
     preferredRepresentation: compactRepresentation
 
+    property bool dockerAvailable: false
+
+    function checkDocker() {
+        executable.exec("command -v docker >/dev/null 2>&1", function (data) {
+            root.dockerAvailable = data["exit code"] === 0;
+        });
+    }
+
+    Component.onCompleted: checkDocker()
+
     toolTipTextFormat: Text.StyledText
     toolTipSubText: "Select a Script to run"
     Plasma5Support.DataSource {
@@ -193,6 +203,7 @@ PlasmoidItem {
                     text: "Docker"
                     icon.name: "docker-desktop"
                     Layout.fillWidth: true
+                    visible: root.dockerAvailable
                     onClicked: {
                         root.refreshDockerContainers();
                         stackView.push(dockerMenu);
