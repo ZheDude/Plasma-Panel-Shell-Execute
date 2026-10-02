@@ -46,30 +46,35 @@ KCM.SimpleKCM {
 
     Kirigami.FormLayout {
         id: form
-
         Layout.fillWidth: true
 
         Kirigami.Separator {
             Kirigami.FormData.isSection: true
             Kirigami.FormData.label: "Select an Icon"
         }
-
-        RowLayout {
-            Kirigami.FormData.label: "Icon:"
-
+        RowLayout{
+            Item {
+                Layout.fillWidth: true
+            }
+            
+            QQC2.Label {
+                text: "Icon:"
+            }
+        
             QQC2.Button {
-                Layout.alignment: Qt.AlignHCenter
                 icon.name: generalConfigPage.cfg_icon || generalConfigPage.cfg_iconDefault
                 text: generalConfigPage.cfg_icon || i18n("Choose…")
                 onClicked: iconDialog.open()
             }
             QQC2.ToolButton {
-                Layout.alignment: Qt.AlignHCenter
                 icon.name: "edit-clear"
                 visible: generalConfigPage.cfg_icon !== generalConfigPage.cfg_iconDefault
                 onClicked: generalConfigPage.cfg_icon = generalConfigPage.cfg_iconDefault
                 QQC2.ToolTip.text: i18n("Reset to default")
                 QQC2.ToolTip.visible: hovered
+            }
+            Item {
+                Layout.fillWidth: true
             }
         }
 
@@ -93,11 +98,11 @@ KCM.SimpleKCM {
                     required property string label
                     required property string commandString
                     QQC2.TextField {
-                    text: label
-                    placeholderText: "Label"
-                    onTextEdited: {
-                        commandModel.setProperty(index, "label", text);
-                    }
+                        text: label
+                        placeholderText: "Label"
+                        onTextEdited: {
+                            commandModel.setProperty(index, "label", text);
+                        }
                     }
                     QQC2.TextField {
                         text: commandString
