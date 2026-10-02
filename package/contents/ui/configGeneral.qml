@@ -115,8 +115,8 @@ KCM.SimpleKCM {
                         icon.name: "list-remove"
                         onClicked: {
                             form.commandList.splice(index, 1);
-                            form.commandList = form.commandList.slice();
                             form.saveList();
+                            form.commandList = form.commandList.slice();
                         }
                     }
                 }
