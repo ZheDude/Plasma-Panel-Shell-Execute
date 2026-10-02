@@ -8,11 +8,41 @@ import org.kde.kcmutils as KCM
 KCM.SimpleKCM {
     id: generalConfigPage
 
-    property alias cfg_icon: icon.text
+    property string cfg_icon
     property string cfg_iconDefault
-
     property string cfg_scriptsCommand
+    property bool loading: true
 
+    ListModel { id: commandModel }
+    
+    Connections {
+        target: commandModel
+        function onRowsInserted() { generalConfigPage.saveList() }
+        function onRowsRemoved()  { generalConfigPage.saveList() }
+        function onDataChanged()  { generalConfigPage.saveList() }
+    }
+
+    // Load once
+    Component.onCompleted: {
+        try {
+            const list = JSON.parse(cfg_scriptsCommand);
+            for (const entry of list)
+                commandModel.append(entry);
+            loading = false;
+        } catch (e) {
+            loading = false;
+        }
+    }
+
+    // Serialize the whole model back into the config property
+    function saveList() {
+        const out = [];
+        for (let i = 0; i < commandModel.count; ++i) {
+            const e = commandModel.get(i);
+            out.push({ label: e.label, iconName: e.iconName, commandString: e.commandString });
+        }
+        cfg_scriptsCommand = JSON.stringify(out);
+    }
 
     Kirigami.FormLayout {
         id: form
@@ -27,25 +57,25 @@ KCM.SimpleKCM {
         RowLayout {
             Kirigami.FormData.label: "Icon:"
 
-            QQC2.TextField {
-                id: icon
-                implicitWidth: 300
-            }
-
             QQC2.Button {
-                icon.name: "folder"
-                onClicked: {
-                    iconDialog.open();
-                }
+                Layout.alignment: Qt.AlignHCenter
+                icon.name: generalConfigPage.cfg_icon || generalConfigPage.cfg_iconDefault
+                text: generalConfigPage.cfg_icon || i18n("Choose…")
+                onClicked: iconDialog.open()
+            }
+            QQC2.ToolButton {
+                Layout.alignment: Qt.AlignHCenter
+                icon.name: "edit-clear"
+                visible: generalConfigPage.cfg_icon !== generalConfigPage.cfg_iconDefault
+                onClicked: generalConfigPage.cfg_icon = generalConfigPage.cfg_iconDefault
+                QQC2.ToolTip.text: i18n("Reset to default")
+                QQC2.ToolTip.visible: hovered
             }
         }
 
         KIconThemes.IconDialog {
             id: iconDialog
-
-            onIconNameChanged: iconName => {
-                generalConfigPage.cfg_icon = iconName;
-            }
+            onIconNameChanged: iconName => generalConfigPage.cfg_icon = iconName
         }
 
         Kirigami.Separator {
@@ -54,71 +84,41 @@ KCM.SimpleKCM {
         }
 
         property var commandList: []
-
-        Component.onCompleted: {
-            try {
-                commandList = JSON.parse(cfg_scriptsCommand);
-            } catch (e) {
-                commandList = [];
-            }
-        }
-
-        function saveList() {
-            cfg_scriptsCommand = JSON.stringify(commandList);
-        }
-
-        GridLayout {
-            width: parent.width
-            Layout.fillWidth: true
-
-            QQC2.Label {
-                text: "Manual Entries:"
-            }
-
-            QQC2.Button {
-                text: "Add Entry"
-                icon.name: "list-add"
-                onClicked: {
-                    form.commandList.push({
-                        label: "",
-                        iconName: "document-save",
-                        commandString: ""
-                    });
-                    form.commandList = form.commandList.slice();
-                    form.saveList();
-                }
-            }
-        }
+        
         ColumnLayout {
             Repeater {
-                model: form.commandList
+                model: commandModel
                 delegate: RowLayout {
-                    required property var modelData
                     required property int index
+                    required property string label
+                    required property string commandString
                     QQC2.TextField {
-                        text: modelData.label
-                        placeholderText: "Label"
-                        onEditingFinished: {
-                            form.commandList[index].label = text;
-                            form.saveList();
-                        }
+                    text: label
+                    placeholderText: "Label"
+                    onTextEdited: {
+                        commandModel.setProperty(index, "label", text);
+                    }
                     }
                     QQC2.TextField {
-                        text: modelData.commandString
+                        text: commandString
                         placeholderText: "Command"
-                        onEditingFinished: {
-                            form.commandList[index].commandString = text;
-                            form.saveList();
+                        onTextEdited: {
+                            commandModel.setProperty(index, "commandString", text);
                         }
                     }
                     QQC2.ToolButton {
                         icon.name: "list-remove"
                         onClicked: {
-                            form.commandList.splice(index, 1);
-                            form.saveList();
-                            form.commandList = form.commandList.slice();
+                            commandModel.remove(index);
                         }
                     }
+                }
+            }
+            QQC2.Button {
+                text: "Add Entry"
+                icon.name: "list-add"
+                onClicked: {
+                    commandModel.append({ label: "", iconName: "document-save", commandString: "" });
                 }
             }
         }

@@ -120,8 +120,6 @@ PlasmoidItem {
 
     function refreshDockerContainers() {
         dockerModel.clear();
-
-        // Dynamic mode: ask docker directly
         executable.exec("docker ps -a --format '{{.Names}}|{{.Status}}'", function (data) {
             if (data["exit code"] !== 0) {
                 console.log("docker ps failed:", data["stderr"]);
