@@ -7,13 +7,13 @@
             }
         ],
         "Category": "System Information",
-        "Description": "A widget to take over the world!",
+        "Description": "This widget allows you to run shell scripts at the click of a button. Use at your own risk.",
         "Icon": "terminal",
         "Id": "org.kde.plasma.shellexecute",
         "Name": "Plasma-Shell-Execute",
-        "Version": "1",
-        "Website": "https://example.com/user/plasmoid-helloworldplugin",
-        "BugReportUrl": "https://example.com/user/plasmoid-helloworldplugin/bugs",
+        "Version": "v1.0",
+        "Website": "https://github.com/ZheDude/Plasma-Panel-Shell-Execute",
+        "BugReportUrl": "https://github.com/ZheDude/Plasma-Panel-Shell-Execute/issues",
         "ServiceTypes": [
             "Plasma/Applet"
         ]
